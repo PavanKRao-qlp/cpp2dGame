@@ -42,11 +42,11 @@ set(EXT_LIBRARY
 #box2d
 box2d;
 #sfml
-sfml-system-s-d;
-sfml-window-s-d;
-sfml-audio-s-d;
-sfml-network-s-d;
-sfml-graphics-s-d;
+debug sfml-system-s-d optimized  sfml-system-s;
+debug sfml-window-s-d optimized sfml-window-s;
+debug sfml-audio-s-d optimized sfml-audio-s;
+debug sfml-network-s-d optimized sfml-network-s;
+debug sfml-graphics-s-d optimized sfml-graphics-s;
 opengl32;
 freetype;
 openal32;

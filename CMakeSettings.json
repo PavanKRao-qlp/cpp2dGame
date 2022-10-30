@@ -37,6 +37,44 @@
           "type": "BOOL"
         }
       ]
+    },
+    {
+      "name": "x64-Release",
+      "generator": "Ninja",
+      "configurationType": "Release",
+      "buildRoot": "${projectDir}\\out\\build\\${name}",
+      "installRoot": "${projectDir}\\out\\install\\${name}",
+      "cmakeCommandArgs": "",
+      "buildCommandArgs": "",
+      "ctestCommandArgs": "",
+      "inheritEnvironments": [ "msvc_x64_x64" ],
+      "variables": [
+        {
+          "name": "SFML_DEPENDENCIES_INSTALL_PREFIX",
+          "value": "E:/Project/2dcppGame/out/install/x64-Debug",
+          "type": "PATH"
+        },
+        {
+          "name": "BUILD_SHARED_LIBS",
+          "value": "False",
+          "type": "BOOL"
+        },
+        {
+          "name": "BOX2D_BUILD_UNIT_TESTS",
+          "value": "False",
+          "type": "BOOL"
+        },
+        {
+          "name": "CMAKE_VERBOSE_MAKEFILE",
+          "value": "False",
+          "type": "BOOL"
+        },
+        {
+          "name": "SFML_USE_SYSTEM_DEPS",
+          "value": "False",
+          "type": "BOOL"
+        }
+      ]
     }
   ]
 }

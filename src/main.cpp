@@ -1,96 +1,100 @@
+#include <SFML\Graphics.hpp>
+#include <Box2D\Box2D.h>
 
-#include <iostream>
-#include "box2d/box2d.h"
-#include "SFML/Graphics.hpp";
-#include "mini/ini.h"
-#include <memory>
+/** We need this to easily convert between pixel and real-world coordinates*/
+static const float SCALE = 32.f;
 
-void printConfig(mINI::INIStructure& configData);
+/** Create the base for the boxes to land */
+void CreateGround(b2World& World, float X, float Y);
+
+/** Create the boxes */
+void CreateBox(b2World& World, int MouseX, int MouseY);
+
 int main()
 {
-	/*b2Vec2 gravity(0.0f, -10.0f);
-	b2World world(gravity);
-	b2BodyDef groundBodyDef;
-	groundBodyDef.position.Set(0.0f, -10.0f);
-	b2PolygonShape groundBox;
-	groundBox.SetAsBox(50.0f, 10.0f);
+    /** Prepare the window */
+    sf::RenderWindow Window(sf::VideoMode(800, 600, 32), "Test");
+    Window.setFramerateLimit(60);
 
-	b2Body* groundBody = world.CreateBody(&groundBodyDef);
-	groundBody->CreateFixture(&groundBox, 0.0f);
+    /** Prepare the world */
+    b2Vec2 Gravity(0.f, 9.8f);
+    b2World World(Gravity);
+    CreateGround(World, 400.f, 500.f);
 
-	b2BodyDef bodyDef;
-	bodyDef.type = b2_dynamicBody;
-	bodyDef.position.Set(0.0f, 4.0f);
-	b2Body* body = world.CreateBody(&bodyDef);
-	b2PolygonShape dynamicBox;
-	dynamicBox.SetAsBox(1.0f, 1.0f);
-	b2FixtureDef fixtureDef;
-	fixtureDef.shape = &dynamicBox;
-	fixtureDef.density = 1.0f;
-	fixtureDef.friction = 0.3f;
-	body->CreateFixture(&fixtureDef);
-	float timeStep = 1.0f / 60.0f;
-	int32 velocityIterations = 6;
-	int32 positionIterations = 2;
-	for (int32 i = 0; i < 60; ++i)
-	{
-		world.Step(timeStep, velocityIterations, positionIterations);
-		b2Vec2 position = body->GetPosition();
-		float angle = body->GetAngle();
-		printf("%4.2f %4.2f %4.2f\n", position.x, position.y, angle);
-	}*/
+    while (Window.isOpen())
+    {
+        sf::Event event;
+        while (Window.pollEvent(event))
+        {
+            if (event.type == sf::Event::Closed)
+                Window.close();
+            if (event.type == sf::Event::MouseButtonPressed)
+            {
+                int MouseX = sf::Mouse::getPosition(Window).x;
+                int MouseY = sf::Mouse::getPosition(Window).y;
+                CreateBox(World, MouseX, MouseY);
+            }
+        }
 
-	sf::Clock cl;
-	mINI::INIFile configFile("assets/config/launch.ini");
-	mINI::INIStructure configData;
-	if (configFile.read(configData))
-	{
-	//	printConfig(configData);		
-	}
-	else
-	{
-		std::cerr << "Failed to read launch config!";
-		return 1;
-	}
+        World.Step(1 / 60.f, 8, 3);
 
-	sf::RenderWindow window(sf::VideoMode(200, 200), "SFML works!");
-	sf::CircleShape shape(100.f);
-	shape.setFillColor(sf::Color::Green);
+        Window.clear(sf::Color::White);
+        int BodyCount = 0;
+        for (b2Body* BodyIterator = World.GetBodyList(); BodyIterator != 0; BodyIterator = BodyIterator->GetNext())
+        {
+            if (BodyIterator->GetType() == b2_dynamicBody)
+            {
+                sf::RectangleShape smallBox(sf::Vector2f(32,32));
+                smallBox.setFillColor(sf::Color::Red);
+                smallBox.setOrigin(16.f, 16.f);
+                smallBox.setPosition(SCALE * BodyIterator->GetPosition().x, SCALE * BodyIterator->GetPosition().y);
+                smallBox.setRotation(BodyIterator->GetAngle() * 180 / b2_pi);
+                Window.draw(smallBox);
+                ++BodyCount;
+            }
+            else
+            {
+                sf::RectangleShape GroundSprite(sf::Vector2f(800,16));
+                GroundSprite.setFillColor(sf::Color::Green);
+                GroundSprite.setOrigin(400.f, 8.f);
+                GroundSprite.setPosition(BodyIterator->GetPosition().x * SCALE, BodyIterator->GetPosition().y * SCALE);
+                GroundSprite.setRotation(180 / b2_pi * BodyIterator->GetAngle());
+                Window.draw(GroundSprite);
+            }
+        }
+        Window.display();
+    }
 
-	while (window.isOpen())
-	{
-		sf::Event event;
-		while (window.pollEvent(event))
-		{
-			if (event.type == sf::Event::Closed)
-				window.close();
-		}
-
-		window.clear();
-		window.draw(shape);
-		window.display();
-	}
-
-
-	std::cout<<"Hello CMake.";
-	return 0;
+    return 0;
 }
 
-
-void printConfig(mINI::INIStructure& configData)
+void CreateBox(b2World& World, int MouseX, int MouseY)
 {
-	std::cout << "-----------------------------------\n";
-	for (auto const& it : configData)
-	{
-		auto const& section = it.first;
-		auto const& collection = it.second;
-		std::cout << "[" << section << "]" << std::endl;
-		for (auto const& it2 : collection)
-		{
-			auto const& key = it2.first;
-			auto const& value = it2.second;
-			std::cout << key << "=" << value << std::endl;
-		}
-	}
-	std::cout << "-----------------------------------\n";
+    b2BodyDef BodyDef;
+    BodyDef.position = b2Vec2(MouseX / SCALE, MouseY / SCALE);
+    BodyDef.type = b2_dynamicBody;
+    b2Body* Body = World.CreateBody(&BodyDef);
+
+    b2PolygonShape Shape;
+    Shape.SetAsBox((32.f / 2) / SCALE, (32.f / 2) / SCALE);
+    b2FixtureDef FixtureDef;
+    FixtureDef.density = 1.f;
+    FixtureDef.friction = 0.7f;
+    FixtureDef.shape = &Shape;
+    Body->CreateFixture(&FixtureDef);
+}
+
+void CreateGround(b2World& World, float X, float Y)
+{
+    b2BodyDef BodyDef;
+    BodyDef.position = b2Vec2(X / SCALE, Y / SCALE);
+    BodyDef.type = b2_staticBody;
+    b2Body* Body = World.CreateBody(&BodyDef);
+
+    b2PolygonShape Shape;
+    Shape.SetAsBox((800.f / 2) / SCALE, (16.f / 2) / SCALE);
+    b2FixtureDef FixtureDef;
+    FixtureDef.density = 0.f;
+    FixtureDef.shape = &Shape;
+    Body->CreateFixture(&FixtureDef);
 }
