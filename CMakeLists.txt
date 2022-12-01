@@ -27,7 +27,7 @@ add_compile_definitions(SFML_STATIC)
 add_subdirectory("vendor/sfml")
 add_subdirectory("vendor/entt")
 add_subdirectory("vendor/box2d")
-
+add_subdirectory("vendor/sdl2")
 
 set(INCLUDE_DIRS 
 "vendor/sfml/include";
@@ -35,8 +35,24 @@ set(INCLUDE_DIRS
 "vendor/entt/src";
 "vendor/mini/src";
 "vendor/box2d/include";
+"vendor/sdl2/include";
 "src/"
 )
+
+if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.11.0")
+    file(GLOB_RECURSE SOURCE_FILES CONFIGURE_DEPENDS 
+     ${PROJECT_SOURCE_DIR}/src/*.cpp 
+     ${PROJECT_SOURCE_DIR}/src/*.h
+    )
+else()
+    file(GLOB SOURCE_FILES
+      ${PROJECT_SOURCE_DIR}/src/*.cpp
+      ${PROJECT_SOURCE_DIR}/src/*.h
+      ${PROJECT_SOURCE_DIR}/src/*/*.h
+      ${PROJECT_SOURCE_DIR}/src/*/*.cpp
+      )
+endif()
+
 
 set(EXT_LIBRARY 
 #box2d
@@ -57,6 +73,8 @@ vorbis;
 ogg;
 ws2_32;
 winmm;
+#sdl2
+SDL2maind
 )
 
 set(EXT_LIBRARY_DIR
@@ -64,10 +82,12 @@ ${PROJECT_SOURCE_DIR}/libs;
 ${PROJECT_SOURCE_DIR}/vendor/box2d/bin;
 ${PROJECT_SOURCE_DIR}/vendor/sfml/extlibs/libs-msvc/x64;
 ${PROJECT_BINARY_DIR}/vendor/sfml/lib;
+${PROJECT_BINARY_DIR}/vendor/sdl2;
+
 )
 
 # Add source to this project's executable.
-add_executable (${PROJECT_NAME} "src/main.cpp")
+add_executable (${PROJECT_NAME} ${SOURCE_FILES})
 target_include_directories(${PROJECT_NAME} PUBLIC ${INCLUDE_DIRS})
 target_link_directories(${PROJECT_NAME} PRIVATE ${EXT_LIBRARY_DIR})
 target_link_libraries(${PROJECT_NAME} PRIVATE ${EXT_LIBRARY})
@@ -83,4 +103,5 @@ add_custom_target(copy_resources ALL
 add_dependencies(${PROJECT_NAME} copy_resources)
 
 install(TARGETS  ${PROJECT_NAME})
+include(CPack)
 # TODO: Add tests and install targets if needed.
